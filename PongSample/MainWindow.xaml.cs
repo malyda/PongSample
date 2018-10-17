@@ -18,48 +18,43 @@ using System.Windows.Threading;
 
 namespace PongSample
 {
-    public enum Direction { Left, Right}
+    public enum Direction { Left, Right }
     public partial class MainWindow : Window
     {
-        int moveDistance = 10;
+        int repeats = 5;
+        int actualRepeat = 0;
+        Direction direction = Direction.Right;
+        Random random = new Random();
         public MainWindow()
         {
             InitializeComponent();
-            var width = this.Width;
-            var height = this.Height;
-            var left = width / 2 - ((double)Platform.GetValue(Canvas.WidthProperty) / 2);
-           
-            Canvas.SetLeft(Platform, left);
-            Canvas.SetLeft(Enemy, left);
-            var top = height - ((double)Platform.GetValue(Canvas.HeightProperty)) - 50;
-            Canvas.SetTop(Platform, top);
-            Canvas.SetTop(Enemy, 0);
-            timer2.Interval = new TimeSpan(100);
-            timer2.Tick += (s, args) => MovePlatform(2, direction);
+            var width = ParentCanvas.Width;
+            var height = ParentCanvas.Height;
+            var leftP = width / 2 - ((double)Platform.GetValue(Canvas.WidthProperty) / 2);
+            var leftE = width / 2 - ((double)Enemy.GetValue(Canvas.WidthProperty) / 2);
+            var topP = height - ((double)Platform.GetValue(Canvas.HeightProperty) * 2);
 
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = new TimeSpan(1000);
-            timer.Tick += new EventHandler(KeyPressed);
-            timer.Start();
+            SetPosition(Enemy, leftE, 0);
+            SetPosition(Platform, leftP, topP);
+
+            DispatcherTimer timerAnimation = new DispatcherTimer();
+            timerAnimation.Interval = new TimeSpan(100);
+            timerAnimation.Tick += (s, args) => MovePlatform(2, direction, timerAnimation);
+
+            DispatcherTimer timerPressedKey = new DispatcherTimer();
+            timerPressedKey.Interval = new TimeSpan(1000);
+            timerPressedKey.Tick += (s, args) => KeyPressed(timerAnimation);
+            timerPressedKey.Start();
 
 
-            DispatcherTimer timer3 = new DispatcherTimer();
-            timer3.Interval = new TimeSpan(50000);
-            timer3.Tick += (s, args) => MoveEnemy( );
-            timer3.Start();
-
-            
+            DispatcherTimer timerEnemy = new DispatcherTimer();
+            timerEnemy.Interval = TimeSpan.FromMilliseconds(6);
+            timerEnemy.Tick += (s, args) => MoveEnemy(timerEnemy);
+            timerEnemy.Start();
         }
 
-        int repeats = 5;
-        int actualRepeat = 0;
-        bool isRepeating = false;
-
-        DispatcherTimer timer2 = new DispatcherTimer();
-        Direction direction = Direction.Right;
-        void KeyPressed(object source, EventArgs e)
-        {  
-           
+        void KeyPressed(DispatcherTimer timerAnimation)
+        {
             bool keyPressed = false;
 
             if (Keyboard.IsKeyDown(Key.Left))
@@ -69,16 +64,16 @@ namespace PongSample
             }
             else if (Keyboard.IsKeyDown(Key.Right))
             {
-                direction = Direction.Right ;
+                direction = Direction.Right;
                 keyPressed = true;
             }
             if (keyPressed)
             {
-                timer2.Start();
+                timerAnimation.Start();
             }
         }
 
-        void MovePlatform(int distance, Direction direction)
+        void MovePlatform(int distance, Direction direction, DispatcherTimer timerAnimation)
         {
             actualRepeat++;
             double left = (double)Platform.GetValue(Canvas.LeftProperty);
@@ -92,22 +87,33 @@ namespace PongSample
             {
                 distanceToMove += distance;
             }
-            Platform.Visibility = Visibility.Hidden;
             Canvas.SetLeft(Platform, distanceToMove);
-            Platform.Visibility = Visibility.Visible;
             if (actualRepeat == repeats)
             {
-                timer2.Stop();
-                isRepeating = false;
+                timerAnimation.Stop();
                 actualRepeat = 0;
             }
         }
 
-        public void MoveEnemy()
-        { 
+        public void MoveEnemy(DispatcherTimer timerEnemy)
+        {
             double top = (double)Enemy.GetValue(Canvas.TopProperty);
-            Canvas.SetTop(Enemy, top + 1);
-            CheckCollision();
+            double height = ParentCanvas.Height;
+            if ((top + 1) >= height)
+            {
+                timerEnemy.Stop();
+            }
+            else
+            {
+                Canvas.SetTop(Enemy, top + 1);
+                CheckCollision();
+            }
+        }
+
+        public void SetPosition(UIElement who, double left, double top)
+        {
+            Canvas.SetLeft(who, left);
+            Canvas.SetTop(who, top);
         }
 
         public void CheckCollision()
@@ -120,14 +126,22 @@ namespace PongSample
 
             double sizeE = Enemy.Width;
 
-            if (topE >= 300)
+            if (topE + Enemy.Height >= topP)
             {
-                if( leftP >= leftE - sizeE && leftP <= leftE + sizeE)
+                if (leftP >= leftE - sizeE && leftP <= leftE + sizeE)
                 {
                     MessageBox.Show("hit");
+                    ResetEnemy();
                 }
             }
         }
 
+        void ResetEnemy()
+        {
+            var screenWidth = ParentCanvas.Width;
+            var enemyWidth = ((double)Enemy.GetValue(Canvas.WidthProperty));
+            var leftE = random.Next((int)(0 + enemyWidth), (int)(screenWidth - enemyWidth));
+            SetPosition(Enemy, leftE, 0);
+        }
     }
 }
