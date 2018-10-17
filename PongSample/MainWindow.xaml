@@ -7,9 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Canvas  x:Name="ParentCanvas" >
-        <Rectangle  Fill="Blue" Width="200" Height="15" x:Name="Platform" RenderOptions.EdgeMode="Aliased">
-
-
-        </Rectangle>
+        <Rectangle  Fill="Blue" Width="200" Height="15" x:Name="Platform"/>
+        <Ellipse Fill="Red" Width="100" Height="100" x:Name="Enemy"/>
     </Canvas>
 </Window>
