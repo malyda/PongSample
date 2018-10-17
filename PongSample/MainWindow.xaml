@@ -6,7 +6,10 @@
         xmlns:local="clr-namespace:PongSample"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+    <Canvas  x:Name="ParentCanvas" >
+        <Rectangle  Fill="Blue" Width="200" Height="15" x:Name="Platform" RenderOptions.EdgeMode="Aliased">
+
+
+        </Rectangle>
+    </Canvas>
 </Window>
